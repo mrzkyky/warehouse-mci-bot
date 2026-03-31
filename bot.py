@@ -249,7 +249,7 @@ async def cmd_rekap(message: Message):
         if Path(excel_path).exists():
             await message.answer_document(
                 FSInputFile(excel_path),
-                caption="📊 Laporan Excel lengkap"
+                caption="📊 Master Laporan Excel (Semua Tanggal)"
             )
         
     except Exception as e:

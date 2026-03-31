@@ -172,32 +172,30 @@ class ReportGenerator:
     
     def generate_excel_report(self, date: Optional[datetime] = None) -> str:
         """Generate Excel report and return file path"""
-        if date is None:
-            date = datetime.now()
-        
-        date_str = date.strftime("%Y-%m-%d")
         
         # Get all transactions
-        keluar = self.get_transactions_for_date(date, TransactionType.KELUAR)
-        masuk = self.get_transactions_for_date(date, TransactionType.MASUK)
-        so = self.get_transactions_for_date(date, TransactionType.SO)
+        transactions = self.session.query(Transaction).order_by(Transaction.created_at).all()
         
         # Create Excel writer
-        file_path = REPORTS_DIR / f"laporan_gudang_{date_str}.xlsx"
+        file_path = REPORTS_DIR / "laporan_gudang_master.xlsx"
         
         with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
-            # Summary sheet
-            summary_data = {
-                'Kategori': ['Barang Keluar', 'Barang Masuk', 'Stock Opname', 'Total'],
-                'Jumlah Item': [len(keluar), len(masuk), len(so), len(keluar)+len(masuk)+len(so)]
-            }
-            df_summary = pd.DataFrame(summary_data)
-            df_summary.to_excel(writer, sheet_name='Ringkasan', index=False)
+            if not transactions:
+                # Empty report
+                pd.DataFrame({"Info": ["Belum ada transaksi"]}).to_excel(writer, sheet_name='Kosong', index=False)
+                return str(file_path)
             
-            # Detail sheets
-            def transactions_to_df(transactions, type_name):
+            # Group by date
+            from collections import defaultdict
+            by_date = defaultdict(list)
+            for t in transactions:
+                date_str = t.transaction_date.strftime("%d-%b-%Y")
+                by_date[date_str].append(t)
+            
+            # Convert to DataFrame
+            def transactions_to_df(trans_list):
                 data = []
-                for t in transactions:
+                for t in trans_list:
                     sns = []
                     if t.serial_numbers:
                         try:
@@ -206,6 +204,7 @@ class ReportGenerator:
                             sns = [t.serial_numbers]
                     
                     data.append({
+                        'Tipe': t.type.value.upper() if t.type else '-',
                         'Waktu': t.created_at.strftime("%H:%M"),
                         'Staff': t.staff_name or '-',
                         'Nama Barang': t.item_name,
@@ -216,22 +215,15 @@ class ReportGenerator:
                         'Serial Numbers': ', '.join(sns) if sns else '-',
                         'Tujuan/Sumber': t.destination or t.source or '-',
                         'Keperluan': t.purpose or '-',
-                        'Kategori': t.category.value if t.category else '-',
+                        'Kategori': t.category.value.upper() if t.category else '-',
                         'Catatan': t.notes or '-'
                     })
                 return pd.DataFrame(data)
             
-            if keluar:
-                df_keluar = transactions_to_df(keluar, 'Keluar')
-                df_keluar.to_excel(writer, sheet_name='Barang Keluar', index=False)
-            
-            if masuk:
-                df_masuk = transactions_to_df(masuk, 'Masuk')
-                df_masuk.to_excel(writer, sheet_name='Barang Masuk', index=False)
-            
-            if so:
-                df_so = transactions_to_df(so, 'SO')
-                df_so.to_excel(writer, sheet_name='Stock Opname', index=False)
+            for date_str, trans_list in by_date.items():
+                df = transactions_to_df(trans_list)
+                df = df.sort_values(by=['Tipe', 'Waktu'])
+                df.to_excel(writer, sheet_name=date_str[:31], index=False)
         
         return str(file_path)
     
