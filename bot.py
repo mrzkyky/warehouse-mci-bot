@@ -496,7 +496,7 @@ async def confirm_transaction(callback: CallbackQuery, state: FSMContext):
                 purpose=parsed.purpose,
                 destination=parsed.destination if trans_type == TransactionType.KELUAR else None,
                 source=parsed.destination if trans_type == TransactionType.MASUK else None,
-                notes=raw_text[:500]
+                notes=None
             )
             session.add(transaction)
             saved_count += 1

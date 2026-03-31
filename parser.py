@@ -58,25 +58,27 @@ class MessageParser:
         """Detect if message is about barang masuk, keluar, or stock opname"""
         text_lower = text.lower()
         
+        def has_keyword(keywords):
+            for kw in keywords:
+                if re.search(rf'\b{re.escape(kw.lower())}\b', text_lower):
+                    return True
+            return False
+        
         # Check for rekap/report commands first
-        for keyword in KEYWORDS["rekap"]:
-            if keyword in text_lower:
-                return "rekap"
+        if has_keyword(KEYWORDS["rekap"]):
+            return "rekap"
         
         # Check for SO/Stock Opname
-        for keyword in KEYWORDS["so"]:
-            if keyword in text_lower:
-                return "so"
+        if has_keyword(KEYWORDS["so"]):
+            return "so"
         
         # Check for barang keluar
-        for keyword in KEYWORDS["barang_keluar"]:
-            if keyword in text_lower:
-                return "keluar"
+        if has_keyword(KEYWORDS["barang_keluar"]):
+            return "keluar"
         
         # Check for barang masuk
-        for keyword in KEYWORDS["barang_masuk"]:
-            if keyword in text_lower:
-                return "masuk"
+        if has_keyword(KEYWORDS["barang_masuk"]):
+            return "masuk"
         
         # Default to keluar if mention "ke" + location
         if re.search(r'\bke\s+(\w+)', text_lower):
