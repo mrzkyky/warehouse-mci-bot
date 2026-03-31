@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  bot:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: warehouse-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=sqlite:///data/warehouse.db
+      - TESSERACT_CMD=/usr/bin/tesseract
+      - TZ=Asia/Jakarta
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./data:/app/data
+      - ./reports:/app/reports
+      - ./temp:/app/temp
+    networks:
+      - warehouse-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Optional: Add PostgreSQL for production use
+  # Uncomment below to use PostgreSQL instead of SQLite
+  #
+  # db:
+  #   image: postgres:15-alpine
+  #   container_name: warehouse-db
+  #   restart: unless-stopped
+  #   environment:
+  #     - POSTGRES_USER=warehouse
+  #     - POSTGRES_PASSWORD=${DB_PASSWORD:-warehouse123}
+  #     - POSTGRES_DB=warehouse
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   networks:
+  #     - warehouse-net
+  #   ports:
+  #     - "127.0.0.1:5432:5432"
+  #
+  # Then update bot service environment:
+  #   DATABASE_URL: postgresql+asyncpg://warehouse:warehouse123@db:5432/warehouse
+
+networks:
+  warehouse-net:
+    driver: bridge
+
+# volumes:
+#   postgres_data:
