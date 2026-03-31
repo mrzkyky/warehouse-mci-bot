@@ -224,8 +224,25 @@ async def cmd_rekap(message: Message):
         # Generate text report
         report_text = generate_daily_report(session, format="text")
         
-        # Send text report
-        await message.answer(report_text, parse_mode="Markdown")
+        # Split text into chunks to avoid Telegram limits
+        MAX_LEN = 3900
+        if len(report_text) <= MAX_LEN:
+            await message.answer(report_text, parse_mode="Markdown")
+        else:
+            parts = []
+            chunk = ""
+            for line in report_text.split('\n'):
+                if len(chunk) + len(line) + 1 > MAX_LEN:
+                    parts.append(chunk)
+                    chunk = line + "\n"
+                else:
+                    chunk += line + "\n"
+            if chunk.strip():
+                parts.append(chunk)
+                
+            for i, part in enumerate(parts):
+                # Ensure each part starts/ends cleanly with markdown if needed, but for simple lines it's fine
+                await message.answer(part, parse_mode="Markdown")
         
         # Generate and send Excel
         excel_path = generate_daily_report(session, format="excel")
