@@ -37,8 +37,8 @@ ENV PATH=/root/.local/bin:$PATH
 
 # Copy application code
 COPY *.py /app/
-COPY .env /app/ 2>/dev/null || echo "No .env file found, using environment variables"
-COPY credentials.json /app/ 2>/dev/null || echo "No credentials.json found, skipping Google Sheets sync"
+COPY .env /app/
+COPY credentials.json /app/
 
 # Create data directories
 RUN mkdir -p /app/data /app/reports /app/temp
