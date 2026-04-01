@@ -21,6 +21,7 @@ from models import (
 from parser import MessageParser, format_item_summary, parse_message
 from ocr import SerialNumberOCR, format_ocr_result
 from report_generator import generate_daily_report
+from sheets_integration import append_transactions_to_sheet
 
 # Logging
 logging.basicConfig(level=logging.INFO)
@@ -519,6 +520,9 @@ async def confirm_transaction(callback: CallbackQuery, state: FSMContext):
             saved_count += 1
         
         session.commit()
+        
+        # Sync to Google Sheets
+        asyncio.create_task(append_transactions_to_sheet(parsed, staff_name, parsed.type))
         
         await callback.message.edit_text(
             f"✅ *Transaksi tersimpan!*\n\n"

@@ -18,6 +18,9 @@ TEMP_DIR.mkdir(exist_ok=True)
 # Bot config
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 
+# Google Sheets config
+GOOGLE_SHEET_URL = os.getenv("GOOGLE_SHEET_URL", "https://docs.google.com/spreadsheets/d/1ZdXAGxDnXZBDGnriXA7jJX9QVA9ANnbbSuAXzf5LbHo/edit?gid=0#gid=0")
+
 # Parse ADMIN_IDS with error handling
 _admin_ids_raw = os.getenv("ADMIN_IDS", "")
 ADMIN_IDS = []
