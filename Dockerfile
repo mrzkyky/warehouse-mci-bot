@@ -37,7 +37,7 @@ ENV PATH=/root/.local/bin:$PATH
 
 # Copy application code
 COPY *.py /app/
-COPY .env /app/
+COPY .env* /app/
 COPY credentials.json /app/
 
 # Create data directories
